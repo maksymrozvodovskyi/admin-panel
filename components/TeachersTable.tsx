@@ -1,10 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useReactTable, getCoreRowModel, flexRender, CellContext } from '@tanstack/react-table'
+import { useState } from 'react'
+import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender, CellContext } from '@tanstack/react-table'
 import type { Teacher } from '@/types/teacher'
 
 export default function TeachersTable({ data }: { data: Teacher[] }) {
+	const [pagination, setPagination] = useState({
+		pageIndex: 0,
+		pageSize: 5,
+	})
+
 	const columns = [
 		{ accessorKey: 'id', header: 'ID' },
 		{
@@ -24,7 +30,13 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 	const table = useReactTable({
 		data,
 		columns,
+		state: { pagination },
+		onPaginationChange: setPagination,
 		getCoreRowModel: getCoreRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
+		initialState: {
+			pagination: { pageIndex: 0, pageSize: 5 },
+		},
 	})
 
 	return (
@@ -56,6 +68,40 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 						))}
 					</tbody>
 				</table>
+			</div>
+
+			<div className='flex justify-center items-center gap-3 mt-4'>
+				<button
+					onClick={() => table.previousPage()}
+					disabled={!table.getCanPreviousPage()}
+					className='px-3 py-1 border rounded disabled:opacity-50'
+				>
+					Prev
+				</button>
+
+				<span className='text-gray-600'>
+					Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+				</span>
+
+				<button
+					onClick={() => table.nextPage()}
+					disabled={!table.getCanNextPage()}
+					className='px-3 py-1 border rounded disabled:opacity-50'
+				>
+					Next
+				</button>
+
+				<select
+					value={table.getState().pagination.pageSize}
+					onChange={e => table.setPageSize(Number(e.target.value))}
+					className='ml-4 px-2 py-1 border rounded'
+				>
+					{[5, 10, 20].map(size => (
+						<option key={size} value={size}>
+							{size} rows
+						</option>
+					))}
+				</select>
 			</div>
 		</section>
 	)
