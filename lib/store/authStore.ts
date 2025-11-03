@@ -1,10 +1,13 @@
 'use client'
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { Admin } from '@/types/admin'
 
 type AuthState = {
 	isLoggedIn: boolean
-	login: (email: string, password: string) => boolean
+	user: Admin | null
+	loginWithServer: (admin: Admin) => void
 	logout: () => void
 }
 
@@ -12,21 +15,20 @@ export const useAuthStore = create<AuthState>()(
 	persist(
 		set => ({
 			isLoggedIn: false,
+			user: null,
 
-			login: (email, password) => {
-				if (email === 'admin@example.com' && password === '123456') {
-					set({ isLoggedIn: true })
-					return true
-				}
-				return false
-			},
+			loginWithServer: admin =>
+				set({
+					isLoggedIn: true,
+					user: admin,
+				}),
 
-			logout: () => {
-				set({ isLoggedIn: false })
-			},
+			logout: () =>
+				set({
+					isLoggedIn: false,
+					user: null,
+				}),
 		}),
-		{
-			name: 'auth-storage',
-		}
+		{ name: 'auth-storage' }
 	)
 )
