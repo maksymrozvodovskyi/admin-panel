@@ -14,7 +14,6 @@ import {
 } from '@tanstack/react-table'
 import { useDebounce } from 'use-debounce'
 import type { Student } from '@/types/student'
-import { useQueryState } from 'nuqs'
 import { saveAs } from 'file-saver'
 import Papa from 'papaparse'
 
