@@ -70,8 +70,8 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 			</div>
 
 			<div className='overflow-x-auto'>
-				<table className='min-w-full border-collapse'>
-					<thead className='bg-gray-100 border-b'>
+				<table className='min-w-full border-collapse border border-gray-200'>
+					<thead className='bg-gray-100'>
 						{table.getHeaderGroups().map(hg => (
 							<tr key={hg.id}>
 								{hg.headers.map(header => (

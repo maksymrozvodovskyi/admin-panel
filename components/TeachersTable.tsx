@@ -87,10 +87,6 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 										className='px-4 py-2 text-left border cursor-pointer select-none'
 									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
-										{{
-											asc: ' 🔼',
-											desc: ' 🔽',
-										}[header.column.getIsSorted() as string] ?? null}
 									</th>
 								))}
 							</tr>
