@@ -7,10 +7,12 @@ import {
 	getCoreRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	getFilteredRowModel,
 	flexRender,
 	type SortingState,
 	type CellContext,
 } from '@tanstack/react-table'
+import { useDebounce } from 'use-debounce'
 import type { Teacher } from '@/types/teacher'
 
 export default function TeachersTable({ data }: { data: Teacher[] }) {
@@ -20,6 +22,8 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 	})
 
 	const [sorting, setSorting] = useState<SortingState>([])
+	const [search, setSearch] = useState('')
+	const [debouncedSearch] = useDebounce(search, 400)
 
 	const columns = [
 		{ accessorKey: 'id', header: 'ID' },
@@ -40,12 +44,18 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 	const table = useReactTable({
 		data,
 		columns,
-		state: { pagination, sorting },
+		state: {
+			pagination,
+			sorting,
+			globalFilter: debouncedSearch,
+		},
 		onPaginationChange: setPagination,
 		onSortingChange: setSorting,
+		onGlobalFilterChange: setSearch,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
 		initialState: {
 			pagination: { pageIndex: 0, pageSize: 5 },
 		},
@@ -53,7 +63,17 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 
 	return (
 		<section className='bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-6'>
-			<h1 className='text-2xl font-semibold mb-6 text-gray-800'>List of Teachers</h1>
+			<div className='flex justify-between items-center mb-6'>
+				<h1 className='text-2xl font-semibold text-gray-800'>List of Teachers</h1>
+
+				<input
+					type='text'
+					value={search}
+					onChange={e => setSearch(e.target.value)}
+					placeholder='Search...'
+					className='border px-3 py-1 rounded-md text-sm'
+				/>
+			</div>
 
 			<div className='overflow-x-auto'>
 				<table className='min-w-full border-collapse border border-gray-200'>
@@ -67,6 +87,10 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 										className='px-4 py-2 text-left border cursor-pointer select-none'
 									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
+										{{
+											asc: ' 🔼',
+											desc: ' 🔽',
+										}[header.column.getIsSorted() as string] ?? null}
 									</th>
 								))}
 							</tr>

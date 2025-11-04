@@ -7,19 +7,20 @@ import {
 	getCoreRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	getFilteredRowModel,
 	flexRender,
 	type SortingState,
 	type CellContext,
 } from '@tanstack/react-table'
+import { useDebounce } from 'use-debounce'
 import type { Student } from '@/types/student'
 
 export default function StudentsTable({ data }: { data: Student[] }) {
-	const [pagination, setPagination] = useState({
-		pageIndex: 0,
-		pageSize: 5,
-	})
-
+	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 })
 	const [sorting, setSorting] = useState<SortingState>([])
+	const [search, setSearch] = useState('')
+
+	const [debouncedSearch] = useDebounce(search, 400)
 
 	const columns = [
 		{ accessorKey: 'id', header: 'ID' },
@@ -40,18 +41,33 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 	const table = useReactTable({
 		data,
 		columns,
-		state: { pagination, sorting },
+		state: {
+			pagination,
+			sorting,
+			globalFilter: debouncedSearch,
+		},
 		onPaginationChange: setPagination,
 		onSortingChange: setSorting,
+		onGlobalFilterChange: setSearch,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
 		initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
 	})
 
 	return (
 		<section className='bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden'>
-			<h1 className='text-2xl font-semibold text-gray-800 p-6'>List of Students</h1>
+			<div className='flex justify-between items-center p-6'>
+				<h1 className='text-2xl font-semibold text-gray-800'>List of Students</h1>
+
+				<input
+					value={search}
+					onChange={e => setSearch(e.target.value)}
+					placeholder='Search...'
+					className='border px-3 py-1 rounded-md text-sm'
+				/>
+			</div>
 
 			<div className='overflow-x-auto'>
 				<table className='min-w-full border-collapse'>
