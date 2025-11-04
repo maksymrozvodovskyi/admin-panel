@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender, CellContext } from '@tanstack/react-table'
+import {
+	useReactTable,
+	getCoreRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	flexRender,
+	type SortingState,
+	type CellContext,
+} from '@tanstack/react-table'
 import type { Student } from '@/types/student'
 
 export default function StudentsTable({ data }: { data: Student[] }) {
@@ -10,6 +18,8 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 		pageIndex: 0,
 		pageSize: 5,
 	})
+
+	const [sorting, setSorting] = useState<SortingState>([])
 
 	const columns = [
 		{ accessorKey: 'id', header: 'ID' },
@@ -30,10 +40,12 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 	const table = useReactTable({
 		data,
 		columns,
-		state: { pagination },
+		state: { pagination, sorting },
 		onPaginationChange: setPagination,
+		onSortingChange: setSorting,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
+		getSortedRowModel: getSortedRowModel(),
 		initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
 	})
 
@@ -47,7 +59,11 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 						{table.getHeaderGroups().map(hg => (
 							<tr key={hg.id}>
 								{hg.headers.map(header => (
-									<th key={header.id} className='px-4 py-2 border text-left'>
+									<th
+										key={header.id}
+										onClick={header.column.getToggleSortingHandler()}
+										className='px-4 py-2 border text-left cursor-pointer select-none'
+									>
 										{flexRender(header.column.columnDef.header, header.getContext())}
 									</th>
 								))}
