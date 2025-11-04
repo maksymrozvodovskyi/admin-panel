@@ -14,6 +14,9 @@ import {
 } from '@tanstack/react-table'
 import { useDebounce } from 'use-debounce'
 import type { Student } from '@/types/student'
+import { useQueryState } from 'nuqs'
+import { saveAs } from 'file-saver'
+import Papa from 'papaparse'
 
 export default function StudentsTable({ data }: { data: Student[] }) {
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 })
@@ -21,6 +24,12 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 	const [search, setSearch] = useState('')
 
 	const [debouncedSearch] = useDebounce(search, 400)
+
+	const exportToCSV = () => {
+		const csv = Papa.unparse(data)
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+		saveAs(blob, 'teachers.csv')
+	}
 
 	const columns = [
 		{ accessorKey: 'id', header: 'ID' },
@@ -58,15 +67,20 @@ export default function StudentsTable({ data }: { data: Student[] }) {
 
 	return (
 		<section className='bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden'>
-			<div className='flex justify-between items-center p-6'>
+			<div className='flex justify-between items-center mb-6'>
 				<h1 className='text-2xl font-semibold text-gray-800'>List of Students</h1>
 
-				<input
-					value={search}
-					onChange={e => setSearch(e.target.value)}
-					placeholder='Search...'
-					className='border px-3 py-1 rounded-md text-sm'
-				/>
+				<div className='flex items-center gap-3'>
+					<input
+						value={search}
+						onChange={e => setSearch(e.target.value)}
+						placeholder='Search...'
+						className='border px-3 py-1 rounded-md text-sm'
+					/>
+					<button onClick={exportToCSV} className='px-3 py-1 border rounded bg-blue-600 text-white hover:bg-blue-700'>
+						Export CSV
+					</button>
+				</div>
 			</div>
 
 			<div className='overflow-x-auto'>
