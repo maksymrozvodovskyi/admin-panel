@@ -1,8 +1,7 @@
 import { getStudents } from '@/lib/api/data'
-import StudentsTable from '@/components/StudentsTable'
+import StudentsClient from './StudentsClient'
 
 export default async function StudentsPage() {
 	const students = await getStudents()
-
-	return <StudentsTable data={students} />
+	return <StudentsClient data={students} />
 }

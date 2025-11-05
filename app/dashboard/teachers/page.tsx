@@ -1,7 +1,7 @@
 import { getTeachers } from '@/lib/api/data'
-import TeachersTable from '@/components/TeachersTable'
+import TeachersClient from './TeachersClient'
 
 export default async function TeachersPage() {
 	const teachers = await getTeachers()
-	return <TeachersTable data={teachers} />
+	return <TeachersClient data={teachers} />
 }

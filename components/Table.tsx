@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import {
 	useReactTable,
@@ -10,41 +9,49 @@ import {
 	getFilteredRowModel,
 	flexRender,
 	type SortingState,
-	type CellContext,
+	type ColumnDef,
 } from '@tanstack/react-table'
-import { useDebounce } from 'use-debounce'
-import type { Teacher } from '@/types/teacher'
+import { useDebounce } from '@/hooks/useDebounce'
 import { saveAs } from 'file-saver'
 import Papa from 'papaparse'
 
-export default function TeachersTable({ data }: { data: Teacher[] }) {
+type TableProps<T extends object> = {
+	title?: string
+	data: T[]
+	columns: ColumnDef<T, any>[]
+	csvName?: string
+}
+
+export default function Table<T extends object>({
+	title = 'Table',
+	data,
+	columns,
+	csvName = 'data.csv',
+}: TableProps<T>) {
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 5 })
 	const [sorting, setSorting] = useState<SortingState>([])
 	const [search, setSearch] = useState('')
+	const debouncedSearch = useDebounce(search, 300)
 
-	const [debouncedSearch] = useDebounce(search, 400)
+	const exportToCSV = (data: any[], fileName = 'data.csv') => {
+		if (!data.length) return
 
-	const exportToCSV = () => {
-		const csv = Papa.unparse(data)
+		const headers = Object.keys(data[0]).join(',')
+		const rows = data.map(row =>
+			Object.values(row)
+				.map(value => `"${String(value).replace(/"/g, '""')}"`)
+				.join(',')
+		)
+		const csv = [headers, ...rows].join('\n')
+
 		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-		saveAs(blob, 'teachers.csv')
+		const url = URL.createObjectURL(blob)
+		const link = document.createElement('a')
+		link.href = url
+		link.download = fileName
+		link.click()
+		URL.revokeObjectURL(url)
 	}
-
-	const columns = [
-		{ accessorKey: 'id', header: 'ID' },
-		{
-			accessorKey: 'name',
-			header: 'Name',
-			cell: ({ row }: CellContext<Teacher, unknown>) => (
-				<Link href={`/dashboard/teachers/${row.original.id}`} className='text-blue-600 hover:underline'>
-					{row.original.name}
-				</Link>
-			),
-		},
-		{ accessorKey: 'age', header: 'Age' },
-		{ accessorKey: 'email', header: 'Email' },
-		{ accessorKey: 'subject', header: 'Subject' },
-	]
 
 	const table = useReactTable({
 		data,
@@ -61,17 +68,12 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		initialState: {
-			pagination: { pageIndex: 0, pageSize: 5 },
-		},
 	})
 
 	return (
-		<section className='bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden'>
+		<section className='bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden'>
 			<div className='flex flex-col md:flex-row justify-between md:items-center gap-4 p-4 md:p-6'>
-				<h1 className='text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left leading-tight'>
-					List of Teachers
-				</h1>
+				<h2 className='text-lg sm:text-xl md:text-2xl font-semibold text-gray-800'>{title}</h2>
 
 				<div className='flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto'>
 					<input
@@ -81,10 +83,8 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 						className='border px-3 py-2 rounded-md text-sm w-full sm:w-60 md:w-72 focus:outline-none focus:ring-2 focus:ring-blue-400'
 					/>
 					<button
-						onClick={exportToCSV}
-						className='h-10 px-4 border border-transparent rounded-md bg-blue-600 text-white 
-						hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-medium 
-						flex-shrink-0 w-auto select-none'
+						onClick={() => exportToCSV(data, csvName)}
+						className='h-10 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-medium'
 					>
 						Export CSV
 					</button>
@@ -92,42 +92,45 @@ export default function TeachersTable({ data }: { data: Teacher[] }) {
 			</div>
 
 			<div className='overflow-x-auto'>
-				<div className='min-w-[700px]'>
-					<table className='w-full border-collapse border border-gray-200 text-sm md:text-base'>
-						<thead className='bg-gray-100'>
-							{table.getHeaderGroups().map(headerGroup => (
-								<tr key={headerGroup.id}>
-									{headerGroup.headers.map(header => (
-										<th
-											key={header.id}
-											onClick={header.column.getToggleSortingHandler()}
-											className='px-3 md:px-4 py-2 text-left border cursor-pointer select-none whitespace-nowrap text-gray-700 font-medium'
-										>
-											{flexRender(header.column.columnDef.header, header.getContext())}
-										</th>
-									))}
-								</tr>
-							))}
-						</thead>
-						<tbody>
-							{table.getRowModel().rows.map(row => (
+				<table className='min-w-full border-collapse border border-gray-200 text-sm md:text-base'>
+					<thead className='bg-gray-100'>
+						{table.getHeaderGroups().map(headerGroup => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map(header => (
+									<th
+										key={header.id}
+										onClick={header.column.getToggleSortingHandler()}
+										className='px-3 md:px-4 py-2 text-left border cursor-pointer select-none whitespace-nowrap text-gray-700 font-medium'
+									>
+										{flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{table.getRowModel().rows.length ? (
+							table.getRowModel().rows.map(row => (
 								<tr key={row.id} className='hover:bg-gray-50 border-b transition-colors'>
 									{row.getVisibleCells().map(cell => (
-										<td
-											key={cell.id}
-											className='px-3 md:px-4 py-2 border whitespace-nowrap text-gray-700 text-sm md:text-base'
-										>
+										<td key={cell.id} className='px-3 md:px-4 py-2 border whitespace-nowrap text-gray-700'>
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}
 										</td>
 									))}
 								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
+							))
+						) : (
+							<tr>
+								<td colSpan={columns.length} className='text-center py-6 text-gray-500'>
+									No data available
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
 			</div>
 
-			<div className='flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-3 p-4 border-t text-sm md:text-base'>
+			<div className='flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-3 p-4 border-t text-sm'>
 				<div className='flex items-center gap-2'>
 					<button
 						onClick={() => table.previousPage()}
