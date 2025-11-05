@@ -1,6 +1,5 @@
 'use client'
 
-import { Menu } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'

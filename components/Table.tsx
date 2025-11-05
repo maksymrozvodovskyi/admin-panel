@@ -12,8 +12,6 @@ import {
 	type ColumnDef,
 } from '@tanstack/react-table'
 import { useDebounce } from '@/hooks/useDebounce'
-import { saveAs } from 'file-saver'
-import Papa from 'papaparse'
 
 type TableProps<T extends object> = {
 	title?: string
