@@ -6,7 +6,6 @@ import {
 	getCoreRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
-	getFilteredRowModel,
 	flexRender,
 	type SortingState,
 	type ColumnDef,
@@ -51,21 +50,25 @@ export default function Table<T extends object>({
 		URL.revokeObjectURL(url)
 	}
 
+	const highlightText = (text: string, query: string) => {
+		if (!query.trim()) return text
+		try {
+			const regex = new RegExp(`(${query})`, 'gi')
+			return text.replace(regex, '<mark class="bg-yellow-300">$1</mark>')
+		} catch {
+			return text
+		}
+	}
+
 	const table = useReactTable({
 		data,
 		columns,
-		state: {
-			pagination,
-			sorting,
-			globalFilter: debouncedSearch,
-		},
+		state: { pagination, sorting },
 		onPaginationChange: setPagination,
 		onSortingChange: setSorting,
-		onGlobalFilterChange: setSearch,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
 	})
 
 	return (
@@ -106,15 +109,23 @@ export default function Table<T extends object>({
 							</tr>
 						))}
 					</thead>
+
 					<tbody>
 						{table.getRowModel().rows.length ? (
 							table.getRowModel().rows.map(row => (
 								<tr key={row.id} className='hover:bg-gray-50 border-b transition-colors'>
-									{row.getVisibleCells().map(cell => (
-										<td key={cell.id} className='px-3 md:px-4 py-2 border whitespace-nowrap text-gray-700'>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
+									{row.getVisibleCells().map(cell => {
+										const value = cell.getValue() ?? ''
+										const rendered = typeof value === 'string' ? highlightText(value, debouncedSearch) : String(value)
+
+										return (
+											<td
+												key={cell.id}
+												className='px-3 md:px-4 py-2 border whitespace-nowrap text-gray-700'
+												dangerouslySetInnerHTML={{ __html: rendered }}
+											/>
+										)
+									})}
 								</tr>
 							))
 						) : (
