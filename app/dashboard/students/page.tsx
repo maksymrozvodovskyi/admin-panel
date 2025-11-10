@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getStudents } from '@/lib/api/data'
 import StudentsClient from './StudentsClient'
 
