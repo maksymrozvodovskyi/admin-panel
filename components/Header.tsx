@@ -20,7 +20,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 	return (
 		<header className='w-full h-14 border-b border-gray-300 bg-[#FFFDF5] px-4 md:px-6 flex items-center justify-between'>
 			<div className='flex items-center gap-3'>
-				{/* Mobile menu button */}
 				<button
 					onClick={toggleSidebar}
 					className='p-2 rounded-md hover:bg-gray-100 transition-colors md:hidden'
